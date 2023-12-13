@@ -1,0 +1,31 @@
+---
+- name: Configure standard ACL
+  hosts: routers
+  gather_facts: false
+  connection: network_cli
+ 
+  tasks:
+   - name: Load new ACL into device
+     ios_config:
+       parents: ip access-list standard VTY
+       lines:
+         - permit 192.168.10.10
+         - permit 192.168.30.30
+         - deny any
+                  
+   - name: Apply new ACL to VTY
+     ios_config:
+       parents: line vty 0 4
+       lines:
+         - access-class VTY in
+
+   - name: Check result
+     ios_command:
+       commands: sh run | begin line vty 0 4
+     register: result
+     tags: show
+
+   - name: Print result
+     debug:
+       var: result.stdout_lines
+     tags: show
