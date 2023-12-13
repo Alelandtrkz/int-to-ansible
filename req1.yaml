@@ -1,0 +1,30 @@
+---
+- name: Configure standard ACL
+  hosts: R2
+  gather_facts: false
+  connection: network_cli
+ 
+  tasks:
+   - name: Load new ACL into device
+     ios_config:
+       parents: ip access-list extended REQ1
+       lines:
+         - 10 deny tcp any any eq telnet
+         - 20 permit ip any any
+                  
+   - name: Apply new ACL to R2 Eth0/1 out
+     ios_config:
+       parents: int e0/1
+       lines:
+         - ip access-group REQ1 out
+
+   - name: Check result
+     ios_command:
+       commands: sh ip access-lists
+     register: result
+     tags: show
+
+   - name: Print result
+     debug:
+       var: result.stdout_lines
+     tags: show
